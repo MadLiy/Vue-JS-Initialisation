@@ -1,104 +1,94 @@
 <template>
-  <h1>Bonjour {{ firstName }}</h1>
+    <Layout>
+        <template #header>
+            En tête
+        </template>
+        <template v-slot:aside>
+            Sidebar
+        </template>
+        <template v-slot:main>
+            Main
+        </template>
+        <template v-slot:footer>
+            Footer
+        </template>
+    </Layout>
+    <form action="" @submit.prevent="addTodo">
+        <fieldset role="group">
+            <input v-model="newTodo" type="text" placeholder="Tâche à effectuer">
+            <button :disabled="newTodo.length === 0">Ajouter</button>
+        </fieldset>
+    </form>
+  <h1>TODO-LIST</h1>
+    <div v-if="todos.length === 0"> Vous n'avez pas de tâches à faire :c </div>
+    <div v-else>
+        <ul>
+            <li
+                v-for="todo in sortedTodos"
+                :key="todo.date"
+                :class="{completed: todo.completed}">
+                <Checkbox :label="todo.title"
+                          v-model="todo.completed"
+                />
 
-  <p :id="`p-${count}`" :class="{active: count > 5}">Compteur : {{ count }} <div v-html="span"></div></p>
-
-  <!-- <div v-show="count >= 5">Bravo vous avez cliqué plus de 5 fois</div> -->
-  <div v-if="count >= 5">Bravo vous avez cliqué plus de 5 fois</div>
-
-  <button @click="increment">Incrémenter</button>
-  <!-- <button @click="decrement">Décrementer</button> -->
-  <button @click="count--">Décrementer</button>
-  <hr>
-  <button @click="sortMovies">Réorganiser</button>
-  <form action="" @submit.prevent="addMovie">
-    <input type="text" placeholder="Nouveau film" v-model="movieName">
-    <button>Ajouter</button>
-  </form>
-
-  <ul>
-    <li
-      v-for="movie in movies"
-      :key="movie"
-    >
-      {{movie}}
-      <button @click="deleteMovie(movie)">Supprimer</button>
-    </li>
-  </ul>
-
-    <ul>
-      <li>
-        {{person.firstname}}
-      </li>
-
-      <li>
-        {{person.lastname}}
-      </li>
-
-      <li>
-        {{person.age}}
-      </li>
-    </ul>
-    <button @click.prevent="randomAge">
-    Changer age
-  </button>
-  <hr>
-
+            </li>
+        </ul>
+        <label>
+            <input type="checkbox" v-model="hideCompleted">
+            Masquer les tâches complétées
+        </label>
+        <p v-if="remainingTodos > 0">
+            {{ remainingTodos }} tâche{{ remainingTodos > 1 ? 's' : '' }} à faire
+        </p>
+        <Checkbox :label="'Bonjour'"/>
+    </div>
 </template>
+
 <script setup>
-import {ref} from 'vue';
+import { computed, ref } from 'vue';
+import Checkbox from './Checkbox.vue'
+import Button from '@/Button.vue'
+import Layout from '@/Layout.vue'
 
-const firstName = "Lilya";
-const count = ref(0);
-const span = '<span>Demo</span>';
+const newTodo = ref('');
+const todos = ref([{
+    title: 'Tâche 1',
+    completed: true,
+    date: 1,
+},{
+    title: 'Tâche 2',
+    completed: false,
+    date: 2,
+}]);
 
-const movieName = ref('');
-const movies = ref([
-  'Matrix',
-  'Lilo & Stitch',
-  'Titanic',
-]);
-
-const person = ref({
-  firstname: 'John',
-  lastname: 'Doe',
-  age: 28,
-});
-
-console.log(count, count.value);
-const increment = (event) => {
-  console.log(event);
-  count.value++;
+const hideCompleted = ref(false);
+const addTodo = () => {
+    todos.value.push({
+        title: newTodo.value,
+        completed: false,
+        date: Date.now()
+    })
+    newTodo.value = '';
 }
 
-const decrement = () => {
-  count.value++;
-}
+const sortedTodos = computed(() => {
+    console.log('demo')
+    const sortedTodos =  todos.value.toSorted((a,b) => a.completed > b.completed ? 1 : -1);
+    if (hideCompleted.value === true){
+        return sortedTodos.filter(t => t.completed === false)
+    }
+    return sortedTodos;
+})
 
-const deleteMovie = (movie) => {
-  movies.value = movies.value.filter(m => m !== movie)
-}
-
-const sortMovies = () => {
-  movies.value.sort((a,b) => a > b ? 1 : -1)
-}
-
-const addMovie = () => {
-  movies.value.push(movieName.value);
-  movieName.value = '';
-}
-
-const randomAge = () => {
-  person.value.age = Math.round(Math.random()* 100);
-}
+const remainingTodos = computed(() => {
+    return todos.value.filter(t => t.completed === false).length;
+})
 
 </script>
 
 <style>
-h1{
-  color: red;
-}
-.active {
-  color: red;
+.completed {
+    opacity: .5;
+    text-decoration: line-through;
 }
 </style>
